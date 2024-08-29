@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import keras_tuner as kt
 
-class FantasyFootballDataProcessor:
+class dataProcessor:
     def __init__(self, df):
         self.df = df
 
