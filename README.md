@@ -4,39 +4,72 @@
 ## Description
 This neural network predicts [fantasy football](https://en.wikipedia.org/wiki/Fantasy_football_(American)) PPR scores for the quarterback (QB), running back (RB), wide receiver (WR) and tight end (TE) positions.
 
-## Resources
-* This program uses [keras](https://keras.io/) to constuct the neural network
-* [numpy](https://www.numpy.org/), [scipy](https://www.scipy.org/) and [pandas](https://pandas.pydata.org/) are used to structure the data
-* [matplotlib](https://matplotlib.org/) is used to plot the results
-* All data is sourced from [Pro Football Reference](https://www.pro-football-reference.com/)
-
-## Neural Network Training
-
-#### Training Data ####
-
-
-#### Structure and Training ####
-
-
-## Neural Network Testing
-
-
-## Predictions
-
-#### QB Model
-
-#### RB Model
-
-#### WR Model
-
-
-
-#### TE Model
-
-
-## How to train a model:
-
-## Explanation of Visualizations
-
-
-## Visualization Examples
+## Features
+   - personal information
+        - givens
+            - player_id,
+            - player_name 
+            - player_display_name
+            - position
+            - recent_team
+            - season
+            - week
+            - season_type
+                - only include regular season games
+            - opponent_team
+        - derived
+            - years of experience
+                - (season) - (player's first season)
+    - passing stats
+        - givens
+            - completions
+            - attempts
+            - passing_yards
+            - passing_tds
+            - interceptions
+            - sacks
+            - sack_yards
+            - sack_fumbles
+            - sack_fumbles_lost
+            - passing_air_yards
+            - passing_yards_after_catch
+            - passing_first_downs
+            - passing_epa
+            - passing_2pt_conversions
+            - pacr (Passing Air Conversion Ratio - efficiency metric relating air yards to passing yards)
+            - dakota (a composite advanced metric for QB efficiency and performance)
+    - rushing stats
+        - givens
+            - carries
+            - rushing_yards
+            - rushing_tds
+            - rushing_fumbles
+            - rushing_fumbles_lost
+            - rushing_first_downs
+            - rushing_epa
+            - rushing_2pt_conversions
+    - receiving stats
+        - givens 
+            - receptions
+            - targets
+            - receiving_yards
+            - receiving_tds
+            - receiving_fumbles-
+            - receiving_fumbles_lost
+            - receiving_air_yards
+            - receiving_yards_after_catch
+            - receiving_first_downs
+            - receiving_epa
+            - receiving_2pt_conversions
+            - racr (Receiving Air Conversion Ratio - efficiency metric relating air yards to receiving yards)
+    - advanced metrics
+        - givens 
+            - target_share (Percentage of team's total passing attempts that targeted this player)
+            - air_yards_share (Percentage of team's total air yards that targeted this player)
+            - wopr (Weighted Opportunity Rating - a metric that combines target share and air yards share for player's overall opportunity)
+    - special teams stats
+        - givens
+            - special_teams_tds
+    - fantasy football metrics
+        - givens
+            - fantasy_points_ppr
