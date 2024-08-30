@@ -110,12 +110,22 @@ class dataPreprocessor:
         return position_dfs
 
     @staticmethod
-    def create_sequences(features, target, sequence_length):
-        X, y = [], []
-        for i in range(len(features) - sequence_length):
-            X.append(features[i:i+sequence_length])
-            y.append(target[i+sequence_length])
-        return np.array(X), np.array(y)
+    def batch_sequence_generator(features, target, sequence_length, batch_size):
+        num_samples = len(features) - sequence_length
+        X_batch, y_batch = [], []
+        for i in range(num_samples):
+            X = features[i:i + sequence_length]
+            y = target[i + sequence_length]
+            X_batch.append(X)
+            y_batch.append(y)
+            
+            if len(X_batch) == batch_size:
+                yield np.array(X_batch), np.array(y_batch)
+                X_batch, y_batch = [], []
+        
+        # Yield remaining data if it doesn't form a full batch
+        if X_batch:
+            yield np.array(X_batch), np.array(y_batch)
 
     @staticmethod
     def normalize_sequences(X_train, X_test):
