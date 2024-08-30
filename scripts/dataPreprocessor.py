@@ -17,6 +17,8 @@ class dataPreprocessor:
         # Calculate the years played
         self.df['years_played'] = self.df.groupby('player_id')['season'].rank(method='dense') - 1
         self.df['years_played'] = self.df['years_played'].astype(int)
+        self.df['team_year'] = self.df['recent_team'] + '_' + self.df['season'].astype(str)
+        self.df['opponent_year'] = self.df['opponent_team'] + '_' + self.df['season'].astype(str)
 
         # Sort by player_id and season to ensure correct order for rolling calculations
         self.df = self.df.sort_values(by=['player_id', 'season', 'week']).reset_index(drop=True)
@@ -33,6 +35,7 @@ class dataPreprocessor:
             group['fp_pct_change_2w'] = group['fantasy_points'].pct_change(periods=2).shift(1)
             group['fp_momentum_3w'] = group['fp_diff_wow'].rolling(window=3, min_periods=1).sum().shift(1)
             group['fp_acceleration'] = group['fp_diff_wow'].diff().shift(1)
+
             return group
 
         # Apply the rolling calculations within each player and season group
@@ -74,7 +77,7 @@ class dataPreprocessor:
 
         self.df = pd.get_dummies(
             self.df,
-            columns=['player_id', 'season']
+            columns=['player_id', 'season', 'team_year', 'opponent_year']
         )
 
         position_dfs = {}

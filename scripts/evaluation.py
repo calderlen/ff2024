@@ -4,6 +4,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import os as os
 
+import tracemalloc
+tracemalloc.start()
+
 class modelEvaluation:
 
     def __init__(self, trained_models, datasets):
@@ -18,7 +21,7 @@ class modelEvaluation:
         baseline_mse = mean_squared_error(y_test, model.predict(X_test))
         importances = np.zeros(X_test.shape[2])
 
-        for i in range(X_test.shape[2]):  # Loop over features
+        for i in range(X_test.shape[2]): 
             shuffled_mses = []
             for _ in range(n_repeats):
                 X_test_permuted = X_test.copy()
@@ -80,3 +83,10 @@ class modelEvaluation:
                 self.feature_importance(model, dataset['X_train'], dataset['y_train'], dataset['X_test'], dataset['y_test'])
                 importances = self.compute_permutation_importance(model, dataset['X_test'], dataset['y_test'])
                 self.plot_feature_importance(importances, feature_names=dataset['feature_names'], title=f"{model.name}_feature_importance")
+
+
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.compare_to(snapshot, 'lineno')
+
+for stat in top_stats[:10]:
+    print(stat)

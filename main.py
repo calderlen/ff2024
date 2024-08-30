@@ -28,7 +28,12 @@ tscv = TimeSeriesSplit(n_splits=5)
 
 df = dpp.feature_engineering()
 
-qb_df_features, qb_df_target, rb_df_features, rb_df_target, wr_df_features, wr_df_target, te_df_features, te_df_target = dpp.clean_data()
+pos_dfs = dpp.clean_data()
+
+qb_df_features, qb_df_target = pos_dfs['QB']
+rb_df_features, rb_df_target = pos_dfs['RB']
+wr_df_features, wr_df_target = pos_dfs['WR']
+te_df_features, te_df_target = pos_dfs['TE']
 
 X_qb, y_qb = dpp.create_sequences(qb_df_features.values, qb_df_target.values, sequence_length)
 X_rb, y_rb = dpp.create_sequences(rb_df_features.values, rb_df_target.values, sequence_length)
