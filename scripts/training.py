@@ -23,7 +23,7 @@ def train_model(datasets, patience=50, restore_best_weights=True):
             input_shape = dataset['X_train'].shape[1:]
             
             # Create the RNN model
-            model = buildModelGRU(input_shape, units=512)
+            model = build_model_gru(input_shape, units=512)
             
             # Train the model
             model.fit(

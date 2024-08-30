@@ -3,13 +3,16 @@ import matplotlib.pyplot as pl
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import os as os
-import pandas as pd
 
-class evaluation:
+class modelEvaluation:
+
     def __init__(self, trained_models, datasets):
         self.trained_models = trained_models
         self.datasets = datasets
+
     # Permutation importance
+    
+    @staticmethod
     def compute_permutation_importance(model, X_test, y_test, n_repeats=5):
 
         baseline_mse = mean_squared_error(y_test, model.predict(X_test))
@@ -26,23 +29,8 @@ class evaluation:
             importances[i] = np.mean(shuffled_mses) - baseline_mse
 
         return importances
-
-
-    # Compute permutation feature importance for each model and each split
-    feature_importance_results = {key: [] for key in trained_models.keys()}
-
-    for key, models in trained_models.items():
-        for i, model in enumerate(models):
-            dataset = datasets[key][i]
-            X_test = dataset['X_test']
-            y_test = dataset['y_test']
-
-            print(f"X_test shape for {key} - split {i + 1}: {X_test.shape}")
-
-            print(f"Computing feature importance for {key} - split {i + 1}...")
-            importances = compute_permutation_importance(model, X_test, y_test)
-            feature_importance_results[key].append(importances)
-
+    
+    @staticmethod
     def plot_feature_importance(importances, feature_names, title):
 
         pl.figure(figsize=(12, 6))
@@ -58,7 +46,8 @@ class evaluation:
 
 
     # Metrics
-    def evaluate_model(model, X_train, y_train, X_test, y_test):
+    @staticmethod
+    def calculate_metrics(model, X_train, y_train, X_test, y_test):
 
         mse_train = mean_squared_error(y_train, model.predict(X_train))
         mse_test = mean_squared_error(y_test, model.predict(X_test))
@@ -81,3 +70,13 @@ class evaluation:
 
         os.makedirs("results", exist_ok=True)
         pl.savefig(f"results/{model.name}_true_vs_predicted.png")
+
+
+    def feature_importance(self):
+        for key, models in self.trained_models.items():
+            for i, model in enumerate(models):
+                dataset = self.datasets[key][i]
+                print(f"Evaluating RNN model for {key} - split {i + 1}...")
+                self.feature_importance(model, dataset['X_train'], dataset['y_train'], dataset['X_test'], dataset['y_test'])
+                importances = self.compute_permutation_importance(model, dataset['X_test'], dataset['y_test'])
+                self.plot_feature_importance(importances, feature_names=dataset['feature_names'], title=f"{model.name}_feature_importance")
