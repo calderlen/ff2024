@@ -1,102 +1,59 @@
-# Importing libraries
-import os
 import pandas as pd
+import os
 import numpy as np
 
 from sklearn.model_selection import TimeSeriesSplit
+from tensorflow.keras.models import load_model
 
-from scripts.dataPreprocessor import dataPreprocessor
-from scripts.training import train_model
-from scripts.evaluation import modelEvaluation
+from scripts.dataProcessor import feature_engineering, clean_data, create_sequences, generate_cv_splits
+from scripts.train import train_model
+from scripts.test import test_model
 
-# Initialize classes
+DATA_PATH = 'data/player_stats.csv'
+RESULTS_PATH = 'results/'
+MODEL_PATH = 'models/'
+PREDICTIONS_PATH = os.path.join(RESULTS_PATH, 'predictions_2024.xlsx')
 
-# Initialize paths
-data_path = 'data/player_stats.csv'
-results_path = 'results/'
-model_path = 'models/'
-predictions_path = os.path.join(results_path, 'predictions_2024.xlsx')
-
-# Load data
-df = pd.read_csv(data_path)
+df = pd.read_csv(DATA_PATH)
 df = df.sort_values(by=['player_id', 'season', 'week'])
 
-dpp = dataPreprocessor(df)
-
-# Data processing
 sequence_length = 3
-batch_size = 64
 tscv = TimeSeriesSplit(n_splits=5)
 
-df = dpp.feature_engineering()
+df = feature_engineering(df)
 
-position_dfs = dpp.clean_data()
+qb_df_features, qb_df_target, rb_df_features, rb_df_target, wr_df_features, wr_df_target, te_df_features, te_df_target = clean_data(df)
 
-qb_df_features, qb_df_target = position_dfs['QB']
-rb_df_features, rb_df_target = position_dfs['RB']
-wr_df_features, wr_df_target = position_dfs['WR']
-te_df_features, te_df_target = position_dfs['TE']
+X_qb, y_qb = create_sequences(qb_df_features.values, qb_df_target.values, sequence_length)
+X_rb, y_rb = create_sequences(rb_df_features.values, rb_df_target.values, sequence_length)
+X_wr, y_wr = create_sequences(wr_df_features.values, wr_df_target.values, sequence_length)
+X_te, y_te = create_sequences(te_df_features.values, te_df_target.values, sequence_length)
 
-qb_gen_batch = dpp.batch_sequence_generator(qb_df_features.values, qb_df_target.values, sequence_length, batch_size)
-rb_gen_batch = dpp.batch_sequence_generator(rb_df_features.values, rb_df_target.values, sequence_length, batch_size)
-wr_gen_batch = dpp.batch_sequence_generator(wr_df_features.values, wr_df_target.values, sequence_length, batch_size)
-te_gen_batch = dpp.batch_sequence_generator(te_df_features.values, te_df_target.values, sequence_length, batch_size)
+datasets = {'QB': [], 'RB': [], 'WR': [], 'TE': []}
 
-
-X_qb_list = []
-y_qb_list = []
-X_rb_list = []
-y_rb_list = []
-X_wr_list = []
-y_wr_list = []
-X_te_list = []
-y_te_list = []
-
-# Iterate over generator and accumulate data
-for X_qb_batch, y_qb_batch in qb_gen_batch:
-    X_qb_list.append(X_qb_batch)
-    y_qb_list.append(y_qb_batch)
-
-for X_rb_batch, y_rb_batch in rb_gen_batch:
-    X_rb_list.append(X_rb_batch)
-    y_rb_list.append(y_rb_batch)
-
-for X_wr_batch, y_wr_batch in wr_gen_batch:
-    X_wr_list.append(X_wr_batch)
-    y_wr_list.append(y_wr_batch)
-
-for X_te_batch, y_te_batch in te_gen_batch:
-    X_te_list.append(X_te_batch)
-    y_te_list.append(y_te_batch)
-
-
-# Convert lists to single NumPy arrays
-X_qb = np.concatenate(X_qb_list, axis=0)
-y_qb = np.concatenate(y_qb_list, axis=0)
-X_rb = np.concatenate(X_rb_list, axis=0)
-y_rb = np.concatenate(y_rb_list, axis=0)
-X_wr = np.concatenate(X_wr_list, axis=0)
-y_wr = np.concatenate(y_wr_list, axis=0)
-X_te = np.concatenate(X_te_list, axis=0)
-y_te = np.concatenate(y_te_list, axis=0)
-
-
-datasets = {'qb': [], 'rb': [], 'wr': [], 'te': []}
-
-for X, y, key in [(X_qb, y_qb, 'qb'), 
-                  (X_rb, y_rb, 'rb'), 
-                  (X_wr, y_wr, 'wr'), 
-                  (X_te, y_te, 'te')]:
-    for i, (X_train, X_test, y_train, y_test) in enumerate(dpp.process_data(X, y, tscv)):
+for X, y, key in [(X_qb, y_qb, 'QB'), 
+                  (X_rb, y_rb, 'RB'), 
+                  (X_wr, y_wr, 'WR'), 
+                  (X_te, y_te, 'TE')]:
+    for i, (X_train, X_test, y_train, y_test) in enumerate(generate_cv_splits(X, y, tscv)):
         datasets[key].append({
             'X_train': X_train,
             'X_test': X_test,
             'y_train': y_train,
             'y_test': y_test
         })
-        
 
-# Train the model
-trained_model, model_predictions = train_model(datasets)
+# Check if model folder and file exists, and if it doesn't create it and train a model. Otherwise, load the model and test it.
+if not os.path.exists(MODEL_PATH):
+    os.makedirs(MODEL_PATH)
 
-#eval = modelEvaluation(trained_model, datasets)
+    trained_model = train_model(datasets)
+else:
+    trained_model = {key: [] for key in datasets.keys()}
+    for key in datasets.keys():
+        for i in range(5):
+            model = load_model(os.path.join(MODEL_PATH, f'{key}_model_{i}.h5'))
+            trained_model[key].append(model)
+
+
+model_predictions = test_model(trained_model, datasets)

@@ -1,4 +1,3 @@
-
 from tensorflow.keras.callbacks import EarlyStopping
 from scripts.modelDesign import build_model_gru
 
@@ -12,8 +11,6 @@ def train_model(datasets, patience=50, restore_best_weights=True):
 
     trained_models = {key: [] for key in datasets.keys()}
     model_predictions = {key: [] for key in datasets.keys()}
-
-    # run the model on the normalized datasets
 
     for key, datasets in datasets.items():
         for i, dataset in enumerate(datasets):
@@ -29,7 +26,7 @@ def train_model(datasets, patience=50, restore_best_weights=True):
             model.fit(
                 dataset['X_train'],
                 dataset['y_train'],
-                epochs=150,
+                epochs=20,
                 batch_size=32,
                 validation_data=(dataset['X_test'], dataset['y_test']),
                 verbose=1,
@@ -39,9 +36,18 @@ def train_model(datasets, patience=50, restore_best_weights=True):
             # Store the model
             trained_models[key].append(model)
 
+            # Store the model in a file
+            model.save(f'models/{key}_model_{i}.h5')
+            
 
-    # Testing
-    
+    # Test the model on the test data
+    datasets = {
+        'qb': [],
+        'rb': [],
+        'wr': [],
+        'te': []
+    }
+
     for key, models in trained_models.items():
         for i, model in enumerate(models):
             dataset = datasets[key][i]
@@ -60,4 +66,3 @@ def train_model(datasets, patience=50, restore_best_weights=True):
             print(f"  Split {i + 1}:")
             print(f"    Shape: {prediction.shape}")
             
-    return trained_models, model_predictions

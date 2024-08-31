@@ -1,7 +1,8 @@
-# Imports
+# necessary imports
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input, GRU, BatchNormalization, Flatten
 from tensorflow.keras.optimizers import Adam
+
 
 def build_model_gru(
     input_shape,
@@ -60,15 +61,20 @@ def build_model_gru(
         **kwargs
     ))
     
+    # Example: Add another GRU layer if return_sequences=True
     if return_sequences:
         model.add(GRU(units=units // 2, return_sequences=False))
     
+    # Example: Add a Dense layer
     model.add(Dense(units=64, activation='relu'))
     
+    # Example: Add a Dropout layer
     model.add(Dropout(rate=0.5))
     
+    # Example: Add Batch Normalization
     model.add(BatchNormalization())
     
+    # Example: Add a final output layer (regression case)
     model.add(Dense(units=1, activation='linear'))
 
     
